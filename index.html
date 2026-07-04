@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cestovní Kancelář - Systém</title>
+    <title>Cestovní Kancelář - Funkční Systém</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -13,12 +16,12 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
+        button { background-color: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 5px; }
         button:hover { background-color: #004085; }
         .hotel-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
         .booking-list { list-style: none; padding: 0; }
-        .booking-item { background: #eee; margin: 10px 0; padding: 10px; border-radius: 4px; cursor: pointer; }
-        .booking-details { background: #fff; border: 1px solid #ccc; padding: 10px; margin-top: 5px; display: none; }
+        .booking-item { background: #eee; margin: 10px 0; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .booking-details { background: #fff; border: 1px solid #ccc; padding: 10px; margin-top: 5px; display: none; font-weight: normal; }
     </style>
 </head>
 <body>
@@ -42,11 +45,11 @@
         <h2>Nový Zákazník - Osobní údaje</h2>
         <div class="form-group">
             <label>Jméno:</label>
-            <input type="text" id="cust-name" required>
+            <input type="text" id="cust-name">
         </div>
         <div class="form-group">
             <label>Příjmení:</label>
-            <input type="text" id="cust-surname" required>
+            <input type="text" id="cust-surname">
         </div>
         <button onclick="saveNameAndGoNext()">Pokračovat</button>
     </div>
@@ -88,22 +91,19 @@
 
     <div id="step-success" class="step">
         <h2>Dovolená úspěšně zabookována!</h2>
-        <p>Data byla odeslána do databáze.</p>
+        <p>Data byla uložena.</p>
         <button onclick="resetApp()">Zpět na začátek</button>
     </div>
 
     <div id="step-admin" class="step">
         <h2>Administrace - Přehled dovolených</h2>
         <ul id="admin-bookings-list" class="booking-list"></ul>
-        <button onclick="resetApp()" style="margin-top: 20px; background-color: #6c757d;">Odhlásit se</button>
+        <button onclick="resetApp()" style="background-color: #6c757d; margin-top: 20px;">Odhlásit se</button>
     </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-    // Tvoje konfigurace Firebase
+<script>
+    // Inicializace Firebase (Starší kompatibilní syntaxe)
     const firebaseConfig = {
         apiKey: "AIzaSyBg7z3WWtWrXwXVxDeuhjWkQuyD94ihc48",
         authDomain: "cestovnikancelar-e59bf.firebaseapp.com",
@@ -114,21 +114,23 @@
         appId: "1:90287757875:web:a5278e3a63415eee30a146"
     };
 
-    // Inicializace Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    let db = null;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+    } catch (e) {
+        console.log("Firebase neběží na lokálním souboru, zapínám lokální režim.");
+    }
 
-    // Globální objekt pro držení stavu aktuální objednávky
+    // Globální data
     window.currentBooking = {};
 
-    // Funkce pro přepínání kroků
-    window.nextStep = function(stepId) {
+    function nextStep(stepId) {
         document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
         document.getElementById(stepId).classList.add('active');
     }
 
-    // Reset aplikace do výchozího stavu
-    window.resetApp = function() {
+    function resetApp() {
         document.getElementById('password').value = '';
         document.getElementById('cust-name').value = '';
         document.getElementById('cust-surname').value = '';
@@ -136,8 +138,7 @@
         nextStep('step-login');
     }
 
-    // 1. KROK: Kontrola hesla
-    window.checkPassword = function() {
+    function checkPassword() {
         const pass = document.getElementById('password').value;
         if (pass === '1111') {
             nextStep('step-employee-main');
@@ -149,44 +150,36 @@
         }
     }
 
-    // 3. KROK: Uložení jména a přechod dál
-    window.saveNameAndGoNext = function() {
+    function saveNameAndGoNext() {
         const name = document.getElementById('cust-name').value.trim();
         const surname = document.getElementById('cust-surname').value.trim();
-        
-        if(!name || !surname) {
-            alert('Vyplňte prosím jméno i příjmení.');
+        if (!name || !surname) {
+            alert('Vyplňte jméno a příjmení!');
             return;
         }
-        
         window.currentBooking.jmeno = name;
         window.currentBooking.prijmeni = surname;
         nextStep('step-travel-details');
     }
 
-    // 4. KROK: Vygenerování hotelů a náhodných letů
-    window.generateHotels = function() {
+    function generateHotels() {
         window.currentBooking.zeme = document.getElementById('travel-country').value;
         window.currentBooking.pocetOsob = document.getElementById('count-total').value;
         window.currentBooking.dospeli = document.getElementById('count-adults').value;
         window.currentBooking.deti = document.getElementById('count-kids').value;
         window.currentBooking.pocetDni = document.getElementById('travel-days').value;
 
-        // Vymýšlení letových údajů (např. Sobota až Sobota podle zadaných dní)
+        // Výpočet příletového dne ze soboty
         const dnyTyzdna = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"];
-        let odletDenIndex = 6; // Sobota
-        let priletDenIndex = (odletDenIndex + parseInt(window.currentBooking.pocetDni)) % 7;
+        let priletDenIndex = (6 + parseInt(window.currentBooking.pocetDni)) % 7;
 
         window.currentBooking.odlet = `Sobota v 06:15 z Prahy`;
-        window.currentBooking.prilep = `${dnyTyzdna[priletDenIndex]} v ${(Math.floor(Math.random() * 10) + 14)}:45 zpět do Prahy`;
-        window.currentBooking.kam = window.currentBooking.zeme;
+        window.currentBooking.prilep = `${dnyTyzdna[priletDenIndex]} v ${(Math.floor(Math.random() * 6) + 14)}:40 zpět do Prahy`;
 
-        // Simulace hotelů s cenami
         const zeme = window.currentBooking.zeme;
         const hotely = [
-            { nazev: `Hotel Grand ${zeme} Resort`, cena: (Math.floor(Math.random() * 5000) + 12000) },
-            { nazev: `${zeme} Beach & Spa`, cena: (Math.floor(Math.random() * 7000) + 18000) },
-            { nazev: `Sun & Sand Villa ${zeme}`, cena: (Math.floor(Math.random() * 3000) + 8000) }
+            { nazev: `Hotel Grand ${zeme} Resort`, cena: (Math.floor(Math.random() * 4000) + 11000) },
+            { nazev: `${zeme} Family Beach & Spa`, cena: (Math.floor(Math.random() * 6000) + 16000) }
         ];
 
         const listDiv = document.getElementById('hotels-list');
@@ -198,18 +191,85 @@
             card.innerHTML = `
                 <h3>${hotel.nazev}</h3>
                 <p><strong>Cena:</strong> ${hotel.cena} Kč / osoba</p>
-                <p><strong>Letové informace:</strong> Odlétá se v ${window.currentBooking.odlet}. Návrat: ${window.currentBooking.prilep}.</p>
+                <p><strong>Let tam:</strong> ${window.currentBooking.odlet}</p>
+                <p><strong>Let zpět:</strong> ${window.currentBooking.prilep}</p>
                 <button onclick="bookHotel('${hotel.nazev}', ${hotel.cena})">Zabookovat</button>
             `;
             listDiv.appendChild(card);
         });
-
         nextStep('step-hotels');
     }
 
-    // 5. KROK: Uložení finálního výběru do Firebase
-    window.bookHotel = function(hotelNazev, cena) {
+    function bookHotel(hotelNazev, cena) {
         window.currentBooking.hotel = hotelNazev;
         window.currentBooking.cenaCelkem = cena * parseInt(window.currentBooking.pocetOsob);
 
-        //
+        if (db) {
+            db.ref('rezervace').push(window.currentBooking)
+                .then(() => nextStep('step-success'))
+                .catch(() => saveOffline());
+        } else {
+            saveOffline();
+        }
+    }
+
+    function saveOffline() {
+        let data = JSON.parse(localStorage.getItem('local_rezervace') || '{}');
+        data['id_' + Date.now()] = window.currentBooking;
+        localStorage.setItem('local_rezervace', JSON.stringify(data));
+        nextStep('step-success');
+    }
+
+    function loadAdminData() {
+        const listEl = document.getElementById('admin-bookings-list');
+        listEl.innerHTML = '';
+
+        const zobraziData = (data) => {
+            if (!data) {
+                listEl.innerHTML = '<li>Zatím žádné rezervace.</li>';
+                return;
+            }
+            let i = 1;
+            for (let key in data) {
+                const b = data[key];
+                const li = document.createElement('li');
+                li.className = 'booking-item';
+                li.innerHTML = `Dovolená ${i} (${b.jmeno} ${b.prijmeni} - ${b.zeme})`;
+
+                const details = document.createElement('div');
+                details.className = 'booking-details';
+                details.innerHTML = `
+                    <p><strong>Hotel:</strong> ${b.hotel}</p>
+                    <p><strong>Počet osob:</strong> ${b.pocetOsob} (Dospělí: ${b.dospeli}, Děti: ${b.deti})</p>
+                    <p><strong>Délka pobytu:</strong> ${b.pocetDni} dní</p>
+                    <p><strong>Odlet:</strong> ${b.odlet}</p>
+                    <p><strong>Přílet:</strong> ${b.prilep}</p>
+                    <p><strong>Celková cena:</strong> ${b.cenaCelkem} Kč</p>
+                `;
+
+                li.onclick = function(e) {
+                    if (e.target.className !== 'booking-details' && e.target.tagName !== 'P') {
+                        const d = details.style.display;
+                        details.style.display = d === 'block' ? 'none' : 'block';
+                    }
+                };
+
+                li.appendChild(details);
+                listEl.appendChild(li);
+                i++;
+            }
+        };
+
+        if (db) {
+            db.ref('rezervace').on('value', (snapshot) => {
+                if(snapshot.exists()) zobraziData(snapshot.val());
+                else zobraziData(JSON.parse(localStorage.getItem('local_rezervace')));
+            });
+        } else {
+            zobraziData(JSON.parse(localStorage.getItem('local_rezervace')));
+        }
+    }
+</script>
+
+</body>
+</html>
