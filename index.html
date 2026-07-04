@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cestovní Kancelář - Kompletní Systém</title>
+    <title>Cestovní Kancelář - Profesionální Systém</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2, h3 { color: #0056b3; margin-top: 0; }
         .step { display: none; }
         .step.active { display: block; }
@@ -25,17 +25,19 @@
         .btn-small { padding: 4px 10px; font-size: 12px; width: auto; display: inline-block; margin-right: 5px; margin-top: 8px; }
         .btn-secondary { background-color: #6c757d; }
         .btn-secondary:hover { background-color: #5a6268; }
+        .btn-bulk { margin-bottom: 15px; font-size: 13px; padding: 6px 12px; width: auto; display: block; }
 
         .hotel-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
-        .booking-list, .employee-list { list-style: none; padding: 0; }
+        .booking-list, .employee-list, .destination-list { list-style: none; padding: 0; }
         
         /* Karty v admin panelu */
-        .booking-item, .employee-item { background: #eee; margin: 10px 0; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .booking-text, .employee-text { display: block; word-break: break-word; margin-bottom: 5px; }
+        .booking-item, .employee-item, .destination-item { background: #eee; margin: 10px 0; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .booking-text, .employee-text, .destination-text { display: block; word-break: break-word; margin-bottom: 5px; }
         .booking-subtext { display: block; font-size: 13px; color: #555; font-weight: normal; margin-top: 3px; }
-        .booking-details { background: #fff; border: 1px solid #ccc; padding: 10px; margin-top: 5px; display: none; font-weight: normal; }
+        .booking-details, .destination-details { background: #fff; border: 1px solid #ccc; padding: 10px; margin-top: 5px; display: none; font-weight: normal; }
         
-        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        /* Třísloupcový admin panel */
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
         .msg-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
     </style>
 </head>
@@ -137,11 +139,19 @@
         <div class="admin-grid">
             <div>
                 <h3>Přehled dovolených</h3>
+                <button class="btn-danger btn-bulk" onclick="deleteAllBookings()">Vymazat všechny dovolené</button>
                 <ul id="admin-bookings-list" class="booking-list"></ul>
             </div>
+            
             <div>
                 <h3>Správa zaměstnanců</h3>
+                <button class="btn-danger btn-bulk" onclick="deleteAllEmployees()">Vymazat všechny zaměstnance</button>
                 <ul id="admin-employees-list" class="employee-list"></ul>
+            </div>
+
+            <div>
+                <h3>Destinace & Hotely</h3>
+                <ul id="admin-destinations-list" class="destination-list"></ul>
             </div>
         </div>
         <button onclick="resetApp()" style="background-color: #6c757d; margin-top: 20px;">Odhlásit se</button>
@@ -167,6 +177,26 @@
     } catch (e) {
         console.log("Firebase neběží.");
     }
+
+    // Fixní data destinací a hotelů pro admin sekci
+    const systemDestinations = {
+        "Egypt": [
+            { nazev: "Hotel Grand Egypt Resort", info: "Základní cena od 11 000 Kč. Luxusní resort s aquaparkem přímo u pláže." },
+            { nazev: "Egypt Family Beach & Spa", info: "Základní cena od 16 000 Kč. Rodinný hotel s wellness centrem a all inclusive." }
+        ],
+        "Řecko": [
+            { nazev: "Hotel Grand Řecko Resort", info: "Základní cena od 11 000 Kč. Tradiční architektura s výhledem na moře." },
+            { nazev: "Řecko Family Beach & Spa", info: "Základní cena od 16 000 Kč. Písčitá pláž, ideální pro rodiny s dětmi." }
+        ],
+        "Španělsko": [
+            { nazev: "Hotel Grand Španělsko Resort", info: "Základní cena od 11 000 Kč. Živá atmosféra, blízko centra i promenády." },
+            { nazev: "Španělsko Family Beach & Spa", info: "Základní cena od 16 000 Kč. Moderní ubytování s velkými bazény." }
+        ],
+        "Itálie": [
+            { nazev: "Hotel Grand Itálie Resort", info: "Základní cena od 11 000 Kč. Výborná italská kuchyně, klidná lokalita." },
+            { nazev: "Itálie Family Beach & Spa", info: "Základní cena od 16 000 Kč. Pokoje s terasou kousek od pláže." }
+        ]
+    };
 
     window.currentBooking = {};
     window.currentEmployee = { jmeno: "", prijmeni: "", id: "" };
@@ -194,6 +224,7 @@
             nextStep('step-admin');
             loadAdminData();
             loadAdminEmployees();
+            loadAdminDestinations();
         } else {
             alert('Nesprávné heslo!');
         }
@@ -309,6 +340,23 @@
         document.getElementById('btn-finish-booking').style.display = 'block';
     }
 
+    // HROMADNÉ MAZÁNÍ DOVOLENÝCH
+    function deleteAllBookings() {
+        if (confirm("Opravdu chcete kompletně VYMAZAT VŠECHNY zabookované dovolené z databáze?")) {
+            if (db) db.ref('rezervace').remove();
+        }
+    }
+
+    // HROMADNÉ MAZÁNÍ ZAMĚSTNANCŮ
+    function deleteAllEmployees() {
+        if (confirm("Opravdu chcete kompletně VYMAZAT VŠECHNY zaměstnance a jejich zprávy z databáze?")) {
+            if (db) {
+                db.ref('zamestnanci').remove();
+                db.ref('zpravy').remove();
+            }
+        }
+    }
+
     function loadAdminData() {
         if (!db) return;
         db.ref('rezervace').on('value', (snapshot) => {
@@ -326,19 +374,16 @@
                 const li = document.createElement('li');
                 li.className = 'booking-item';
 
-                // Hlavní text s informacemi (Dovolená + cílová země)
                 const textSpan = document.createElement('span');
                 textSpan.className = 'booking-text';
                 textSpan.innerHTML = `Dovolená ${i} (${b.zeme})`;
                 li.appendChild(textSpan);
 
-                // NOVINKA: Viditelný text KDO jede rovnou pod hlavním názvem
                 const subtextSpan = document.createElement('span');
                 subtextSpan.className = 'booking-subtext';
                 subtextSpan.innerHTML = `<strong>Klient:</strong> ${b.jmeno} ${b.prijmeni}<br><strong>Osob celkem:</strong> ${b.pocetOsob} (Dospělí: ${b.dospeli}, Děti: ${b.deti})`;
                 li.appendChild(subtextSpan);
 
-                // POD TEXTEM: Tlačítko pro smazání
                 const delBtn = document.createElement('button');
                 delBtn.className = 'btn-danger btn-small';
                 delBtn.innerText = 'Smazat';
@@ -350,7 +395,6 @@
                 };
                 li.appendChild(delBtn);
 
-                // Zbytek technických detailů (otevřou se kliknutím na kartu)
                 const details = document.createElement('div');
                 details.className = 'booking-details';
                 details.innerHTML = `
@@ -426,6 +470,43 @@
                 listEl.appendChild(li);
             }
         });
+    }
+
+    // NAČTENÍ DESTINACÍ A HOTELŮ DO TŘETÍHO SLOUPCE ADMINA
+    function loadAdminDestinations() {
+        const listEl = document.getElementById('admin-destinations-list');
+        listEl.innerHTML = '';
+
+        for (let zeme in systemDestinations) {
+            const li = document.createElement('li');
+            li.className = 'destination-item';
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'destination-text';
+            textSpan.innerText = zeme;
+            li.appendChild(textSpan);
+
+            // Skrytá sekce hotelů, která se otevře po kliknutí na zemi
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'destination-details';
+            
+            systemDestinations[zeme].forEach(hotel => {
+                detailsDiv.innerHTML += `
+                    <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
+                        <strong>${hotel.nazev}</strong>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: #666;">${hotel.info}</p>
+                    </div>
+                `;
+            });
+
+            li.onclick = function() {
+                const currentDisplay = detailsDiv.style.display;
+                detailsDiv.style.display = currentDisplay === 'block' ? 'none' : 'block';
+            };
+
+            li.appendChild(detailsDiv);
+            listEl.appendChild(li);
+        }
     }
 </script>
 
