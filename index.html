@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cestovní Kancelář - Profesionální Systém</title>
+    <title>Cestovní Kancelář - Dynamický Systém</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2, h3 { color: #0056b3; margin-top: 0; }
         .step { display: none; }
         .step.active { display: block; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: Arial, sans-serif; }
         button { background-color: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 5px; }
         button:hover { background-color: #004085; }
         
@@ -36,8 +36,12 @@
         .booking-subtext { display: block; font-size: 13px; color: #555; font-weight: normal; margin-top: 3px; }
         .booking-details, .destination-details { background: #fff; border: 1px solid #ccc; padding: 10px; margin-top: 5px; display: none; font-weight: normal; }
         
+        /* Formulare uvnitr destinaci */
+        .admin-subform { background: #f9f9f9; padding: 10px; border: 1px solid #ddd; margin-top: 10px; border-radius: 4px; }
+        .admin-subform input, .admin-subform textarea { margin-bottom: 8px; font-size: 13px; padding: 6px; }
+
         /* Třísloupcový admin panel */
-        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .msg-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
     </style>
 </head>
@@ -69,7 +73,7 @@
     <div id="step-employee-main" class="step">
         <h2>Hlavní menu - Zaměstnanec</h2>
         <p>Přihlášen jako: <span id="active-emp-shadow" style="font-weight:bold;"></span></p>
-        <button onclick="nextStep('step-customer-name')">Nový Zákazník</button>
+        <button onclick="goToCustomerStep()">Nový Zákazník</button>
         <button onclick="resetApp()" style="background-color: #6c757d; margin-top: 10px;">Odhlásit se</button>
     </div>
 
@@ -89,13 +93,8 @@
     <div id="step-travel-details" class="step">
         <h2>Detaily dovolené</h2>
         <div class="form-group">
-            <label>Země:</label>
-            <select id="travel-country">
-                <option value="Egypt">Egypt</option>
-                <option value="Řecko">Řecko</option>
-                <option value="Španělsko">Španělsko</option>
-                <option value="Itálie">Itálie</option>
-            </select>
+            <label>Země (Destinace):</label>
+            <select id="travel-country"></select>
         </div>
         <div class="form-group">
             <label>Počet osob celkem:</label>
@@ -119,6 +118,7 @@
     <div id="step-hotels" class="step">
         <h2>Nabídka hotelů</h2>
         <div id="hotels-list"></div>
+        <button onclick="nextStep('step-travel-details')" style="background-color:#6c757d; margin-top:15px;">Zpět na detaily</button>
     </div>
 
     <div id="step-success" class="step">
@@ -151,6 +151,13 @@
 
             <div>
                 <h3>Destinace & Hotely</h3>
+                
+                <div style="background:#eee; padding:10px; border-radius:4px; margin-bottom:15px;">
+                    <label style="font-size:14px;">Přidat nový stát:</label>
+                    <input type="text" id="new-country-name" placeholder="Např. Maledivy" style="margin-bottom:5px;">
+                    <button onclick="addCountry()" style="font-size:14px; padding:6px;">Uložit stát</button>
+                </div>
+
                 <ul id="admin-destinations-list" class="destination-list"></ul>
             </div>
         </div>
@@ -178,28 +185,9 @@
         console.log("Firebase neběží.");
     }
 
-    // Fixní data destinací a hotelů pro admin sekci
-    const systemDestinations = {
-        "Egypt": [
-            { nazev: "Hotel Grand Egypt Resort", info: "Základní cena od 11 000 Kč. Luxusní resort s aquaparkem přímo u pláže." },
-            { nazev: "Egypt Family Beach & Spa", info: "Základní cena od 16 000 Kč. Rodinný hotel s wellness centrem a all inclusive." }
-        ],
-        "Řecko": [
-            { nazev: "Hotel Grand Řecko Resort", info: "Základní cena od 11 000 Kč. Tradiční architektura s výhledem na moře." },
-            { nazev: "Řecko Family Beach & Spa", info: "Základní cena od 16 000 Kč. Písčitá pláž, ideální pro rodiny s dětmi." }
-        ],
-        "Španělsko": [
-            { nazev: "Hotel Grand Španělsko Resort", info: "Základní cena od 11 000 Kč. Živá atmosféra, blízko centra i promenády." },
-            { nazev: "Španělsko Family Beach & Spa", info: "Základní cena od 16 000 Kč. Moderní ubytování s velkými bazény." }
-        ],
-        "Itálie": [
-            { nazev: "Hotel Grand Itálie Resort", info: "Základní cena od 11 000 Kč. Výborná italská kuchyně, klidná lokalita." },
-            { nazev: "Itálie Family Beach & Spa", info: "Základní cena od 16 000 Kč. Pokoje s terasou kousek od pláže." }
-        ]
-    };
-
     window.currentBooking = {};
     window.currentEmployee = { jmeno: "", prijmeni: "", id: "" };
+    window.globalCountries = {}; // Zde se budou ukládat státy stažené z DB
 
     function nextStep(stepId) {
         document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -227,6 +215,27 @@
             loadAdminDestinations();
         } else {
             alert('Nesprávné heslo!');
+        }
+    }
+
+    // Zaměstnanec klikne na Nový zákazník -> Načteme dynamické státy do selectu
+    function goToCustomerStep() {
+        if(db) {
+            db.ref('destinace').once('value', (snapshot) => {
+                const selectEl = document.getElementById('travel-country');
+                selectEl.innerHTML = '';
+                const data = snapshot.val();
+                if(!data) {
+                    selectEl.innerHTML = '<option value="">(Nejprve vytvořte státy v adminu)</option>';
+                } else {
+                    for(let cKey in data) {
+                        selectEl.innerHTML += `<option value="${data[cKey].nazev}">${data[cKey].nazev}</option>`;
+                    }
+                }
+                nextStep('step-customer-name');
+            });
+        } else {
+            nextStep('step-customer-name');
         }
     }
 
@@ -265,8 +274,13 @@
         nextStep('step-travel-details');
     }
 
+    // Generování hotelů pro zaměstnance na základě dat z Firebase
     function generateHotels() {
         window.currentBooking.zeme = document.getElementById('travel-country').value;
+        if(!window.currentBooking.zeme) {
+            alert('Není vybrána žádná destinace!');
+            return;
+        }
         window.currentBooking.pocetOsob = document.getElementById('count-total').value;
         window.currentBooking.dospeli = document.getElementById('count-adults').value;
         window.currentBooking.deti = document.getElementById('count-kids').value;
@@ -278,27 +292,38 @@
         window.currentBooking.odlet = `Sobota v 06:15 z Prahy`;
         window.currentBooking.prilep = `${dnyTyzdna[priletDenIndex]} v ${(Math.floor(Math.random() * 6) + 14)}:40 zpět do Prahy`;
 
-        const zeme = window.currentBooking.zeme;
-        const hotely = [
-            { nazev: `Hotel Grand ${zeme} Resort`, cena: (Math.floor(Math.random() * 4000) + 11000) },
-            { nazev: `${zeme} Family Beach & Spa`, cena: (Math.floor(Math.random() * 6000) + 16000) }
-        ];
-
         const listDiv = document.getElementById('hotels-list');
         listDiv.innerHTML = '';
 
-        hotely.forEach(hotel => {
-            const card = document.createElement('div');
-            card.className = 'hotel-card';
-            card.innerHTML = `
-                <h3>${hotel.nazev}</h3>
-                <p><strong>Cena:</strong> ${hotel.cena} Kč / osoba</p>
-                <p><strong>Let tam:</strong> ${window.currentBooking.odlet}</p>
-                <p><strong>Let zpět:</strong> ${window.currentBooking.prilep}</p>
-                <button onclick="bookHotel('${hotel.nazev}', ${hotel.cena})">Zabookovat</button>
-            `;
-            listDiv.appendChild(card);
-        });
+        // Hledáme hotely ve Firebase pro vybranou zemi
+        let nasliJsmeHotely = false;
+        for (let cKey in window.globalCountries) {
+            if (window.globalCountries[cKey].nazev === window.currentBooking.zeme) {
+                const hotelyData = window.globalCountries[cKey].hotely;
+                if (hotelyData) {
+                    nasliJsmeHotely = true;
+                    for (let hKey in hotelyData) {
+                        const hotel = hotelyData[hKey];
+                        const card = document.createElement('div');
+                        card.className = 'hotel-card';
+                        card.innerHTML = `
+                            <h3>${hotel.nazev}</h3>
+                            <p style="color:#555; font-style:italic; margin-bottom:8px;">${hotel.popis || 'Bez popisu.'}</p>
+                            <p><strong>Cena:</strong> ${hotel.cena} Kč / osoba</p>
+                            <p><strong>Let tam:</strong> ${window.currentBooking.odlet}</p>
+                            <p><strong>Let zpět:</strong> ${window.currentBooking.prilep}</p>
+                            <button onclick="bookHotel('${hotel.nazev.replace(/'/g, "\\'")}', ${hotel.cena})">Zabookovat</button>
+                        `;
+                        listDiv.appendChild(card);
+                    }
+                }
+            }
+        }
+
+        if (!nasliJsmeHotely) {
+            listDiv.innerHTML = '<p style="color:red;">Pro tuto destinaci zatím admin nepřidal žádné hotely.</p>';
+        }
+
         nextStep('step-hotels');
     }
 
@@ -340,14 +365,12 @@
         document.getElementById('btn-finish-booking').style.display = 'block';
     }
 
-    // HROMADNÉ MAZÁNÍ DOVOLENÝCH
     function deleteAllBookings() {
         if (confirm("Opravdu chcete kompletně VYMAZAT VŠECHNY zabookované dovolené z databáze?")) {
             if (db) db.ref('rezervace').remove();
         }
     }
 
-    // HROMADNÉ MAZÁNÍ ZAMĚSTNANCŮ
     function deleteAllEmployees() {
         if (confirm("Opravdu chcete kompletně VYMAZAT VŠECHNY zaměstnance a jejich zprávy z databáze?")) {
             if (db) {
@@ -357,12 +380,59 @@
         }
     }
 
+    // DYNAMICKÁ SPRÁVA: Přidání státu adminem
+    function addCountry() {
+        const nameInput = document.getElementById('new-country-name');
+        const name = nameInput.value.trim();
+        if(!name) {
+            alert('Zadejte název státu!');
+            return;
+        }
+        if(db) {
+            db.ref('destinace').push({ nazev: name });
+            nameInput.value = '';
+        }
+    }
+
+    // DYNAMICKÁ SPRÁVA: Přidání hotelu ke konkrétnímu státu
+    function addHotel(countryKey) {
+        const nazev = document.getElementById(`h-name-${countryKey}`).value.trim();
+        const cena = document.getElementById(`h-price-${countryKey}`).value.trim();
+        const popis = document.getElementById(`h-desc-${countryKey}`).value.trim();
+
+        if(!nazev || !cena || !popis) {
+            alert('Pro přidání hotelu musíte vyplnit Název, Cenu i Popis!');
+            return;
+        }
+
+        if(db) {
+            db.ref(`destinace/${countryKey}/hotely`).push({
+                nazev: nazev,
+                cena: parseInt(cena),
+                popis: popis
+            });
+        }
+    }
+
+    // DYNAMICKÁ SPRÁVA: Smazání jednoho hotelu
+    function deleteHotel(countryKey, hotelKey) {
+        if(confirm('Opravdu chcete tento hotel odstranit?')) {
+            if(db) db.ref(`destinace/${countryKey}/hotely/${hotelKey}`).remove();
+        }
+    }
+
+    // DYNAMICKÁ SPRÁVA: Smazání celého státu
+    function deleteCountry(countryKey) {
+        if(confirm('Opravdu chcete smazat tento stát včetně všech jeho hotelů?')) {
+            if(db) db.ref(`destinace/${countryKey}`).remove();
+        }
+    }
+
     function loadAdminData() {
         if (!db) return;
         db.ref('rezervace').on('value', (snapshot) => {
             const listEl = document.getElementById('admin-bookings-list');
             listEl.innerHTML = '';
-            
             const data = snapshot.val();
             if (!data) {
                 listEl.innerHTML = '<li>Zatím žádné rezervace.</li>';
@@ -425,13 +495,11 @@
         db.ref('zamestnanci').on('value', (snapshot) => {
             const listEl = document.getElementById('admin-employees-list');
             listEl.innerHTML = '';
-            
             const data = snapshot.val();
             if (!data) {
                 listEl.innerHTML = '<li>Žádní zaměstnanci v evidenci.</li>';
                 return;
             }
-
             for (let key in data) {
                 const emp = data[key];
                 const li = document.createElement('li');
@@ -472,41 +540,99 @@
         });
     }
 
-    // NAČTENÍ DESTINACÍ A HOTELŮ DO TŘETÍHO SLOUPCE ADMINA
+    // NAČTENÍ A ZOBRAZENÍ DYNAMICKÝCH DESTINACÍ V ADMINU
     function loadAdminDestinations() {
-        const listEl = document.getElementById('admin-destinations-list');
-        listEl.innerHTML = '';
+        if (!db) return;
+        db.ref('destinace').on('value', (snapshot) => {
+            window.globalCountries = snapshot.val() || {};
+            const listEl = document.getElementById('admin-destinations-list');
+            listEl.innerHTML = '';
 
-        for (let zeme in systemDestinations) {
-            const li = document.createElement('li');
-            li.className = 'destination-item';
+            const data = window.globalCountries;
+            if (Object.keys(data).length === 0) {
+                listEl.innerHTML = '<li>Žádné destinace. Přidejte stát výše.</li>';
+                return;
+            }
 
-            const textSpan = document.createElement('span');
-            textSpan.className = 'destination-text';
-            textSpan.innerText = zeme;
-            li.appendChild(textSpan);
+            for (let countryKey in data) {
+                const zeme = data[countryKey];
+                const li = document.createElement('li');
+                li.className = 'destination-item';
 
-            // Skrytá sekce hotelů, která se otevře po kliknutí na zemi
-            const detailsDiv = document.createElement('div');
-            detailsDiv.className = 'destination-details';
-            
-            systemDestinations[zeme].forEach(hotel => {
-                detailsDiv.innerHTML += `
-                    <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                        <strong>${hotel.nazev}</strong>
-                        <p style="margin: 2px 0 0 0; font-size: 12px; color: #666;">${hotel.info}</p>
-                    </div>
+                const textSpan = document.createElement('span');
+                textSpan.className = 'destination-text';
+                textSpan.innerText = zeme.nazev;
+                li.appendChild(textSpan);
+
+                // Rozevírací sekce státu (formulář + hotely)
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'destination-details';
+                
+                // Vnitřní formulář pro přidání hotelu pod tímto státem
+                const subForm = document.createElement('div');
+                subForm.className = 'admin-subform';
+                subForm.onclick = function(e) { e.stopPropagation(); }; // Zabrání zavření karty při kliku do formuláře
+                subForm.innerHTML = `
+                    <strong style="font-size:12px; color:#0056b3;">+ Přidat hotel do státu ${zeme.nazev}:</strong>
+                    <input type="text" id="h-name-${countryKey}" placeholder="Název hotelu">
+                    <input type="number" id="h-price-${countryKey}" placeholder="Cena za osobu (Kč)">
+                    <textarea id="h-desc-${countryKey}" placeholder="Popis hotelu (služby, pláž, all inclusive...)" rows="2"></textarea>
+                    <button onclick="addHotel('${countryKey}')" style="font-size:12px; padding:4px 8px;">Uložit hotel</button>
                 `;
-            });
+                detailsDiv.appendChild(subForm);
 
-            li.onclick = function() {
-                const currentDisplay = detailsDiv.style.display;
-                detailsDiv.style.display = currentDisplay === 'block' ? 'none' : 'block';
-            };
+                // Výpis již existujících hotelů
+                const hotelsCont = document.createElement('div');
+                hotelsCont.style.marginTop = '10px';
+                if (zeme.hotely) {
+                    for (let hotelKey in zeme.hotely) {
+                        const h = zeme.hotely[hotelKey];
+                        const hDiv = document.createElement('div');
+                        hDiv.style = "background:#f0f0f0; padding:6px; margin-top:5px; border-radius:4px; font-weight:normal; font-size:13px; position:relative;";
+                        hDiv.innerHTML = `
+                            <strong>${h.nazev}</strong> - ${h.cena} Kč/os.<br>
+                            <span style="font-size:11px; color:#555;">${h.popis}</span><br>
+                        `;
+                        
+                        const delHBtn = document.createElement('button');
+                        delHBtn.className = 'btn-danger';
+                        delHBtn.style = "width:auto; padding:2px 6px; font-size:10px; margin-top:4px;";
+                        delHBtn.innerText = 'Smazat hotel';
+                        delHBtn.onclick = function(e) {
+                            e.stopPropagation();
+                            deleteHotel(countryKey, hotelKey);
+                        };
+                        hDiv.appendChild(delHBtn);
+                        hotelsCont.appendChild(hDiv);
+                    }
+                } else {
+                    hotelsCont.innerHTML = '<p style="font-size:12px; color:#777; font-weight:normal; margin:5px 0 0 0;">V tomto státě zatím nejsou žádné hotely.</p>';
+                }
+                detailsDiv.appendChild(hotelsCont);
 
-            li.appendChild(detailsDiv);
-            listEl.appendChild(li);
-        }
+                // Červené tlačítko pro smazání celého státu úplně dole v kartě
+                const delCountryBtn = document.createElement('button');
+                delCountryBtn.className = 'btn-danger btn-small';
+                delCountryBtn.style.marginTop = '15px';
+                delCountryBtn.innerText = 'Smazat celý stát';
+                delCountryBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    deleteCountry(countryKey);
+                };
+                detailsDiv.appendChild(delCountryBtn);
+
+                // Akce rozevření po kliknutí na řádek státu
+                li.onclick = function(e) {
+                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                        const currentDisplay = detailsDiv.style.display;
+                        detailsDiv.style.display = currentDisplay === 'block' ? 'none' : 'block';
+                    }
+                };
+
+                li.appendChild(detailsDiv);
+                listEl.appendChild(li);
+            }
+        });
     }
 </script>
 
