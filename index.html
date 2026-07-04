@@ -9,7 +9,7 @@
     
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 750px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2, h3 { color: #0056b3; margin-top: 0; }
         .step { display: none; }
         .step.active { display: block; }
@@ -18,13 +18,23 @@
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { background-color: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 5px; }
         button:hover { background-color: #004085; }
+        
+        /* Styly tlačítek v adminu */
         .btn-danger { background-color: #dc3545; }
         .btn-danger:hover { background-color: #bd2130; }
+        .btn-small { padding: 4px 10px; font-size: 12px; width: auto; display: inline-block; margin-right: 5px; margin-top: 8px; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5a6268; }
+
         .hotel-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
         .booking-list, .employee-list { list-style: none; padding: 0; }
-        .booking-item, .employee-item { background: #eee; margin: 10px 0; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; position: relative; min-height: 20px; }
+        
+        /* Karty v admin panelu */
+        .booking-item, .employee-item { background: #eee; margin: 10px 0; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .booking-text, .employee-text { display: block; word-break: break-word; margin-bottom: 5px; }
+        .booking-subtext { display: block; font-size: 13px; color: #555; font-weight: normal; margin-top: 3px; }
         .booking-details { background: #fff; border: 1px solid #ccc; padding: 10px; margin-top: 5px; display: none; font-weight: normal; }
-        .delete-btn { position: absolute; right: 10px; top: 6px; padding: 4px 8px; font-size: 12px; z-index: 10; }
+        
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .msg-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
     </style>
@@ -315,10 +325,22 @@
                 const b = data[key];
                 const li = document.createElement('li');
                 li.className = 'booking-item';
-                li.innerHTML = `Dovolená ${i} (${b.jmeno} ${b.prijmeni} - ${b.zeme})`;
 
+                // Hlavní text s informacemi (Dovolená + cílová země)
+                const textSpan = document.createElement('span');
+                textSpan.className = 'booking-text';
+                textSpan.innerHTML = `Dovolená ${i} (${b.zeme})`;
+                li.appendChild(textSpan);
+
+                // NOVINKA: Viditelný text KDO jede rovnou pod hlavním názvem
+                const subtextSpan = document.createElement('span');
+                subtextSpan.className = 'booking-subtext';
+                subtextSpan.innerHTML = `<strong>Klient:</strong> ${b.jmeno} ${b.prijmeni}<br><strong>Osob celkem:</strong> ${b.pocetOsob} (Dospělí: ${b.dospeli}, Děti: ${b.deti})`;
+                li.appendChild(subtextSpan);
+
+                // POD TEXTEM: Tlačítko pro smazání
                 const delBtn = document.createElement('button');
-                delBtn.className = 'btn-danger delete-btn';
+                delBtn.className = 'btn-danger btn-small';
                 delBtn.innerText = 'Smazat';
                 delBtn.onclick = function(e) {
                     e.stopPropagation();
@@ -328,12 +350,12 @@
                 };
                 li.appendChild(delBtn);
 
+                // Zbytek technických detailů (otevřou se kliknutím na kartu)
                 const details = document.createElement('div');
                 details.className = 'booking-details';
                 details.innerHTML = `
                     <p><strong>Zadal zaměstnanec:</strong> ${b.zadalZamestnanec || 'Neznámo'}</p>
                     <p><strong>Hotel:</strong> ${b.hotel}</p>
-                    <p><strong>Počet osob:</strong> ${b.pocetOsob} (Dospělí: ${b.dospeli}, Děti: ${b.deti})</p>
                     <p><strong>Délka pobytu:</strong> ${b.pocetDni} dní</p>
                     <p><strong>Odlet:</strong> ${b.odlet}</p>
                     <p><strong>Přílet:</strong> ${b.prilep}</p>
@@ -341,7 +363,7 @@
                 `;
 
                 li.onclick = function(e) {
-                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'P') {
+                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'P' && e.target.tagName !== 'STRONG') {
                         const d = details.style.display;
                         details.style.display = d === 'block' ? 'none' : 'block';
                     }
@@ -370,32 +392,36 @@
                 const emp = data[key];
                 const li = document.createElement('li');
                 li.className = 'employee-item';
-                li.innerText = `${emp.jmeno} ${emp.prijmeni}`;
 
-                // NOVINKA: Tlačítko pro smazání zaměstnance
+                const textSpan = document.createElement('span');
+                textSpan.className = 'employee-text';
+                textSpan.innerText = `${emp.jmeno} ${emp.prijmeni}`;
+                li.appendChild(textSpan);
+
+                const msgBtn = document.createElement('button');
+                msgBtn.className = 'btn-secondary btn-small';
+                msgBtn.innerText = 'Zpráva / Přestávka';
+                msgBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    const zprava = prompt(`Zadejte zprávu/přestávku pro zaměstnance ${emp.jmeno}:`);
+                    if (zprava !== null && zprava.trim() !== "") {
+                        db.ref('zpravy/' + key).set({ text: zprava });
+                        alert(`Zpráva odeslána. Ukáže se mu hned po příštím bookování.`);
+                    }
+                };
+                li.appendChild(msgBtn);
+
                 const delEmpBtn = document.createElement('button');
-                delEmpBtn.className = 'btn-danger delete-btn';
+                delEmpBtn.className = 'btn-danger btn-small';
                 delEmpBtn.innerText = 'Smazat';
                 delEmpBtn.onclick = function(e) {
-                    e.stopPropagation(); // Zabrání spuštění promptu pro poslání zprávy
-                    if(confirm(`Opravdu chcete smazat zaměstnance ${emp.jmeno} ${emp.prijmeni} ze systému?`)) {
+                    e.stopPropagation();
+                    if(confirm(`Opravdu chcete smazat zaměstnance ${emp.jmeno} ${emp.prijmeni}?`)) {
                         db.ref('zamestnanci/' + key).remove();
-                        // Smažeme případně i čekající zprávy pro něj
                         db.ref('zpravy/' + key).remove();
                     }
                 };
                 li.appendChild(delEmpBtn);
-
-                // Kliknutím kamkoliv jinam na řádek pošleme zprávu
-                li.onclick = function(e) {
-                    if (e.target.tagName !== 'BUTTON') {
-                        const zprava = prompt(`Zadejte zprávu/přestávku pro zaměstnance ${emp.jmeno}:`);
-                        if (zprava !== null && zprava.trim() !== "") {
-                            db.ref('zpravy/' + key).set({ text: zprava });
-                            alert(`Zpráva odeslána. Ukáže se mu hned po příštím bookování.`);
-                        }
-                    }
-                };
 
                 listEl.appendChild(li);
             }
