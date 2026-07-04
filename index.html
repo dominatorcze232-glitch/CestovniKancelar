@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cestovní Kancelář - Funkční Systém</title>
+    <title>Cestovní Kancelář - Pokročilý Systém</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: #0056b3; margin-top: 0; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2, h3 { color: #0056b3; margin-top: 0; }
         .step { display: none; }
         .step.active { display: block; }
         .form-group { margin-bottom: 15px; }
@@ -18,10 +18,15 @@
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { background-color: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 5px; }
         button:hover { background-color: #004085; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #bd2130; }
         .hotel-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px; background: #fafafa; }
-        .booking-list { list-style: none; padding: 0; }
-        .booking-item { background: #eee; margin: 10px 0; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .booking-list, .employee-list { list-style: none; padding: 0; }
+        .booking-item, .employee-item { background: #eee; margin: 10px 0; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; position: relative; }
         .booking-details { background: #fff; border: 1px solid #ccc; padding: 10px; margin-top: 5px; display: none; font-weight: normal; }
+        .delete-btn { position: absolute; right: 10px; top: 8px; padding: 5px 10px; font-size: 12px; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .msg-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
     </style>
 </head>
 <body>
@@ -36,19 +41,34 @@
         <button onclick="checkPassword()">Vstoupit</button>
     </div>
 
+    <div id="step-employee-login-name" class="step">
+        <h2>Identifikace zaměstnance</h2>
+        <div class="form-group">
+            <label>Vaše Jméno:</label>
+            <input type="text" id="emp-login-name">
+        </div>
+        <div class="form-group">
+            <label>Vaše Příjmení:</label>
+            <input type="text" id="emp-login-surname">
+        </div>
+        <button onclick="saveEmployeeIdentity()">Vstoupit do menu</button>
+    </div>
+
     <div id="step-employee-main" class="step">
         <h2>Hlavní menu - Zaměstnanec</h2>
+        <p>Přihlášen jako: <span id="active-emp-shadow" style="font-weight:bold;"></span></p>
         <button onclick="nextStep('step-customer-name')">Nový Zákazník</button>
+        <button onclick="resetApp()" style="background-color: #6c757d; margin-top: 10px;">Odhlásit se</button>
     </div>
 
     <div id="step-customer-name" class="step">
         <h2>Nový Zákazník - Osobní údaje</h2>
         <div class="form-group">
-            <label>Jméno:</label>
+            <label>Jméno zákazníka:</label>
             <input type="text" id="cust-name">
         </div>
         <div class="form-group">
-            <label>Příjmení:</label>
+            <label>Příjmení zákazníka:</label>
             <input type="text" id="cust-surname">
         </div>
         <button onclick="saveNameAndGoNext()">Pokračovat</button>
@@ -91,19 +111,35 @@
 
     <div id="step-success" class="step">
         <h2>Dovolená úspěšně zabookována!</h2>
-        <p>Data byla uložena.</p>
-        <button onclick="resetApp()">Zpět na začátek</button>
+        <p>Data byla odeslána do systému.</p>
+        
+        <div id="admin-message-box" class="msg-box" style="display:none;">
+            <h3>Zpráva od administrátora:</h3>
+            <p id="admin-message-text"></p>
+            <button onclick="acknowledgeMessage()" style="background-color: #856404;">Rozumím (Zavřít)</button>
+        </div>
+
+        <button id="btn-finish-booking" onclick="nextStep('step-employee-main')">Pokračovat do menu</button>
     </div>
 
     <div id="step-admin" class="step">
-        <h2>Administrace - Přehled dovolených</h2>
-        <ul id="admin-bookings-list" class="booking-list"></ul>
+        <h2>Administrace</h2>
+        <div class="admin-grid">
+            <div>
+                <h3>Přehled dovolených</h3>
+                <ul id="admin-bookings-list" class="booking-list"></ul>
+            </div>
+            <div>
+                <h3>Správa zaměstnanců</h3>
+                <ul id="admin-employees-list" class="employee-list"></ul>
+            </div>
+        </div>
         <button onclick="resetApp()" style="background-color: #6c757d; margin-top: 20px;">Odhlásit se</button>
     </div>
 </div>
 
 <script>
-    // Inicializace Firebase (Starší kompatibilní syntaxe)
+    // Konfigurace Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBg7z3WWtWrXwXVxDeuhjWkQuyD94ihc48",
         authDomain: "cestovnikancelar-e59bf.firebaseapp.com",
@@ -119,11 +155,12 @@
         firebase.initializeApp(firebaseConfig);
         db = firebase.database();
     } catch (e) {
-        console.log("Firebase neběží na lokálním souboru, zapínám lokální režim.");
+        console.log("Firebase běží v lokálním offline režimu.");
     }
 
-    // Globální data
+    // Globální stavové proměnné
     window.currentBooking = {};
+    window.currentEmployee = { jmeno: "", prijmeni: "", id: "" };
 
     function nextStep(stepId) {
         document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -134,6 +171,8 @@
         document.getElementById('password').value = '';
         document.getElementById('cust-name').value = '';
         document.getElementById('cust-surname').value = '';
+        document.getElementById('emp-login-name').value = '';
+        document.getElementById('emp-login-surname').value = '';
         window.currentBooking = {};
         nextStep('step-login');
     }
@@ -141,24 +180,52 @@
     function checkPassword() {
         const pass = document.getElementById('password').value;
         if (pass === '1111') {
-            nextStep('step-employee-main');
+            nextStep('step-employee-login-name');
         } else if (pass === '6852') {
             nextStep('step-admin');
             loadAdminData();
+            loadAdminEmployees();
         } else {
             alert('Nesprávné heslo!');
         }
+    }
+
+    // Uložení totožnosti zaměstnance a zápis do DB, aby o něm admin věděl
+    function saveEmployeeIdentity() {
+        const jmeno = document.getElementById('emp-login-name').value.trim();
+        const prijmeni = document.getElementById('emp-login-surname').value.trim();
+        if (!jmeno || !prijmeni) {
+            alert('Vyplňte prosím své jméno a příjmení!');
+            return;
+        }
+        window.currentEmployee.jmeno = jmeno;
+        window.currentEmployee.prijmeni = prijmeni;
+        // Vytvoříme unikátní ID z jména bez mezer
+        window.currentEmployee.id = (jmeno + "_" + prijmeni).replace(/\s+/g, '');
+
+        document.getElementById('active-emp-shadow').innerText = jmeno + " " + prijmeni;
+
+        // Uložíme zaměstnance do seznamu aktivních pro admina
+        if (db) {
+            db.ref('zamestnanci/' + window.currentEmployee.id).update({
+                jmeno: jmeno,
+                prijmeni: prijmeni
+            });
+        }
+        nextStep('step-employee-main');
     }
 
     function saveNameAndGoNext() {
         const name = document.getElementById('cust-name').value.trim();
         const surname = document.getElementById('cust-surname').value.trim();
         if (!name || !surname) {
-            alert('Vyplňte jméno a příjmení!');
+            alert('Vyplňte jméno a příjmení zákazníka!');
             return;
         }
         window.currentBooking.jmeno = name;
         window.currentBooking.prijmeni = surname;
+        // Automaticky přiřadíme jméno aktuálně přihlášeného zaměstnance
+        window.currentBooking.zadalZamestnanec = window.currentEmployee.jmeno + " " + window.currentEmployee.prijmeni;
         nextStep('step-travel-details');
     }
 
@@ -169,7 +236,6 @@
         window.currentBooking.deti = document.getElementById('count-kids').value;
         window.currentBooking.pocetDni = document.getElementById('travel-days').value;
 
-        // Výpočet příletového dne ze soboty
         const dnyTyzdna = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"];
         let priletDenIndex = (6 + parseInt(window.currentBooking.pocetDni)) % 7;
 
@@ -206,10 +272,11 @@
 
         if (db) {
             db.ref('rezervace').push(window.currentBooking)
-                .then(() => nextStep('step-success'))
-                .catch(() => saveOffline());
+                .then(() => checkForAdminMessages())
+                .catch(() => { saveOffline(); checkForAdminMessages(); });
         } else {
             saveOffline();
+            checkForAdminMessages();
         }
     }
 
@@ -217,14 +284,44 @@
         let data = JSON.parse(localStorage.getItem('local_rezervace') || '{}');
         data['id_' + Date.now()] = window.currentBooking;
         localStorage.setItem('local_rezervace', JSON.stringify(data));
-        nextStep('step-success');
     }
 
-    function loadAdminData() {
-        const listEl = document.getElementById('admin-bookings-list');
-        listEl.innerHTML = '';
+    // Zkontroluje, zda admin nenechal přihlášenému zaměstnanci zprávu
+    function checkForAdminMessages() {
+        if (db) {
+            db.ref('zpravy/' + window.currentEmployee.id).once('value', (snapshot) => {
+                if (snapshot.exists() && snapshot.val().text) {
+                    document.getElementById('admin-message-text').innerText = snapshot.val().text;
+                    document.getElementById('admin-message-box').style.display = 'block';
+                    document.getElementById('btn-finish-booking').style.display = 'none'; // Schováme pokračování, dokud neodklikne OK
+                } else {
+                    document.getElementById('admin-message-box').style.display = 'none';
+                    document.getElementById('btn-finish-booking').style.display = 'block';
+                }
+                nextStep('step-success');
+            });
+        } else {
+            nextStep('step-success');
+        }
+    }
 
-        const zobraziData = (data) => {
+    // Zaměstnanec potvrdil zprávu -> vymaže se z DB i z obrazovky
+    function acknowledgeMessage() {
+        if (db) {
+            db.ref('zpravy/' + window.currentEmployee.id).remove();
+        }
+        document.getElementById('admin-message-box').style.display = 'none';
+        document.getElementById('btn-finish-booking').style.display = 'block';
+    }
+
+    // ADMIN: Načtení dovolených s opravou duplikace a možností mazání
+    function loadAdminData() {
+        if (!db) return;
+        db.ref('rezervace').on('value', (snapshot) => {
+            const listEl = document.getElementById('admin-bookings-list');
+            listEl.innerHTML = ''; // Vyčištění před překreslením
+            
+            const data = snapshot.val();
             if (!data) {
                 listEl.innerHTML = '<li>Zatím žádné rezervace.</li>';
                 return;
@@ -236,9 +333,22 @@
                 li.className = 'booking-item';
                 li.innerHTML = `Dovolená ${i} (${b.jmeno} ${b.prijmeni} - ${b.zeme})`;
 
+                // Tlačítko pro smazání
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-danger delete-btn';
+                delBtn.innerText = 'Smazat';
+                delBtn.onclick = function(e) {
+                    e.stopPropagation(); // Zabrání otevření detailu při kliknutí na smazat
+                    if(confirm('Opravdu chcete tuto dovolenou smazat?')) {
+                        db.ref('rezervace/' + key).remove();
+                    }
+                };
+                li.appendChild(delBtn);
+
                 const details = document.createElement('div');
                 details.className = 'booking-details';
                 details.innerHTML = `
+                    <p><strong>Zadal zaměstnanec:</strong> ${b.zadalZamestnanec || 'Neznámo'}</p>
                     <p><strong>Hotel:</strong> ${b.hotel}</p>
                     <p><strong>Počet osob:</strong> ${b.pocetOsob} (Dospělí: ${b.dospeli}, Děti: ${b.deti})</p>
                     <p><strong>Délka pobytu:</strong> ${b.pocetDni} dní</p>
@@ -248,7 +358,7 @@
                 `;
 
                 li.onclick = function(e) {
-                    if (e.target.className !== 'booking-details' && e.target.tagName !== 'P') {
+                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'P') {
                         const d = details.style.display;
                         details.style.display = d === 'block' ? 'none' : 'block';
                     }
@@ -258,16 +368,41 @@
                 listEl.appendChild(li);
                 i++;
             }
-        };
+        });
+    }
 
-        if (db) {
-            db.ref('rezervace').on('value', (snapshot) => {
-                if(snapshot.exists()) zobraziData(snapshot.val());
-                else zobraziData(JSON.parse(localStorage.getItem('local_rezervace')));
-            });
-        } else {
-            zobraziData(JSON.parse(localStorage.getItem('local_rezervace')));
-        }
+    // ADMIN: Načtení seznamu zaměstnanců a možnost poslat zprávu / přestávku
+    function loadAdminEmployees() {
+        if (!db) return;
+        db.ref('zamestnanci').on('value', (snapshot) => {
+            const listEl = document.getElementById('admin-employees-list');
+            listEl.innerHTML = '';
+            
+            const data = snapshot.val();
+            if (!data) {
+                listEl.innerHTML = '<li>Žádní zaměstnanci v evidenci.</li>';
+                return;
+            }
+
+            for (let key in data) {
+                const emp = data[key];
+                const li = document.createElement('li');
+                li.className = 'employee-item';
+                li.innerText = `${emp.jmeno} ${emp.prijmeni}`;
+
+                li.onclick = function() {
+                    const zprava = prompt(`Zadejte zprávu/přestávku pro zaměstnance ${emp.jmeno}:`);
+                    if (zprava !== null && zprava.trim() !== "") {
+                        db.ref('zpravy/' + key).set({
+                            text: zprava
+                        });
+                        alert(`Zpráva odeslána. Ukáže se mu hned po příštím bookování.`);
+                    }
+                };
+
+                listEl.appendChild(li);
+            }
+        });
     }
 </script>
 
