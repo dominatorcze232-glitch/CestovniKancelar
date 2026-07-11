@@ -141,9 +141,9 @@
     <div id="step-admin" class="step">
         <h2>Administrace</h2>
         
-        <!-- Speciální panel pro nahrání připravených zemí -->
+        <!-- Panel pro nahrání připravených zemí -->
         <div id="setup-box" style="background: #e3f2fd; border: 1px solid #90caf9; padding: 12px; border-radius: 4px; margin-bottom: 15px; display: none;">
-            <span style="color: #0d47a1; font-weight: bold;">💡 Systém zjistil, že databáze destinací je prázdná.</span>
+            <span style="color: #0d47a1; font-weight: bold;">💡 V databázi chybí destinace. Chcete je nahrát?</span>
             <button onclick="installPredefinedDestinations()" style="background-color: #0d47a1; font-size: 14px; width: auto; padding: 6px 12px; margin-left: 10px; display: inline-block;">Nahrát 19 připravených zemí a hotelů</button>
         </div>
 
@@ -198,139 +198,61 @@
         console.log("Firebase neběží.");
     }
 
-    // Seznam 19 zemí a hotelů k automatickému nahrání
     const defaultDestinations = [
-        {
-            nazev: "Maledivy",
-            hotely: {
-                "h1": { nazev: "Velassaru Maldives Luxury Resort", cena: 45000, popis: "Nádherné vodní vily, průzračná laguna, korálové útesy a kompletní all inclusive servis." },
-                "h2": { nazev: "Sun Siyam Vilu Reef", cena: 32000, popis: "Rodinný tropický ráj s bílým pískem, kokosovými palmami a bohatým večerním programem." }
-            }
-        },
-        {
-            nazev: "Španělsko",
-            hotely: {
-                "h1": { nazev: "Sol Mallorca Beach Hotel", cena: 16500, popis: "Hotel kousek od písečné pláže s velkým bazénem. Ideální pro rodiny a páry." },
-                "h2": { nazev: "Barceló Andalucia Resort", cena: 21000, popis: "Luxusní hotel ve středomořském stylu s špičkovou španělskou gastronomií." }
-            }
-        },
-        {
-            nazev: "Itálie",
-            hotely: {
-                "h1": { nazev: "Hotel Bella Vista Rimini", cena: 12400, popis: "Tradiční hotel na jadranské riviéře. Výtečná domácí pasta a pizza v ceně." },
-                "h2": { nazev: "Amalfi Coast Grand Palace", cena: 29000, popis: "Exkluzivní ubytování na skalách s výhledem na Tyrhénské moře." }
-            }
-        },
-        {
-            nazev: "Řecko",
-            hotely: {
-                "h1": { nazev: "Lindos Royal Rhodes", cena: 17800, popis: "Resort v řeckém stylu s aquaparkem, skvělé all inclusive, kousek od antického Lindosu." },
-                "h2": { nazev: "Crete Paradise Beach", cena: 15900, popis: "Klidný hotel přímo na pláži s pozvolným vstupem do moře, ideální pro děti." }
-            }
-        },
-        {
-            nazev: "Turecko",
-            hotely: {
-                "h1": { nazev: "Titanic Deluxe Lara", cena: 19500, popis: "Obří luxusní resort ve tvaru lodi. Ultra All Inclusive, nonstop bary a tobogány." },
-                "h2": { nazev: "Alanya Sun Marriott", cena: 13900, popis: "Příjemný hotel u Kleopatřiny pláže, skvělý poměr ceny a kvality služeb." }
-            }
-        },
-        {
-            nazev: "Egypt",
-            hotely: {
-                "h1": { nazev: "Sunrise Crystal Bay Hurghada", cena: 14200, popis: "Soukromá písečná laguna, skvělé šnorchlování, luxusní servis a jídlo po celý den." },
-                "h2": { nazev: "Pickalbatros Oasis Marsa Alam", cena: 15500, popis: "Ráj pro potápěče, korálový útes přímo u hotelového mola, rodinná atmosféra." }
-            }
-        },
-        {
-            nazev: "Tunisko",
-            hotely: {
-                "h1": { nazev: "El Mouradi Djerba Menzel", cena: 11200, popis: "Rozlehlý hotelový komplex v thalasso stylu s termálními bazény a písečnou pláží." },
-                "h2": { nazev: "Iberostar Kantaoui Bay", cena: 14800, popis: "Moderní pětihvězdičkový hotel s vysokým standardem služeb blízko přístavu Port El Kantaoui." }
-            }
-        },
-        {
-            nazev: "USA",
-            hotely: {
-                "h1": { nazev: "The New York Manhattan Central", cena: 34000, popis: "Hotel přímo v srdci Manhattanu, pár kroků od Times Square a Central Parku." },
-                "h2": { nazev: "Miami South Beach Resort", cena: 28500, popis: "Art deco styl, ikonický bazén, pláž hned přes ulici a pulzující noční život." }
-            }
-        },
-        {
-            nazev: "USA - Hawaii",
-            hotely: {
-                "h1": { nazev: "Waikiki Beach Marriott Resort", cena: 49000, popis: "Exotický ráj v Honolulu. Výhled na sopku Diamond Head a lekce surfování zdarma." },
-                "h2": { nazev: "Maui Ocean Spa Villas", cena: 56000, popis: "Luxusní vily uprostřed tropické zahrady s privátním přístupem na pláž Kaanapali." }
-            }
-        },
-        {
-            nazev: "Francie",
-            hotely: {
-                "h1": { nazev: "Hotel de Paris Nice", cena: 24500, popis: "Ubytování na Azurovém pobřeží, přímo na Promenade des Anglais." },
-                "h2": { nazev: "Pullman Paris Tour Eiffel", cena: 31000, popis: "Pokoje s přímým výhledem na Eiffelovu věž, luxusní snídaně a perfektní dostupnost." }
-            }
-        },
-        {
-            nazev: "Monako",
-            hotely: {
-                "h1": { nazev: "Fairmont Monte Carlo", cena: 48000, popis: "Unikátní hotel postavený přímo nad mořem, hned u slavné zatáčky okruhu Formule 1." }
-            }
-        },
-        {
-            nazev: "Portugalsko",
-            hotely: {
-                "h1": { nazev: "Algarve Cliffs Cliff Resort", cena: 19800, popis: "Úchvatné výhledy na Atlantik z vysokých útesů, písečné pláže schované mezi skalami." },
-                "h2": { nazev: "Lisbon Pestana Citizen", cena: 16500, popis: "Boutique hotel v historickém centru Lisabonu, ideální pro objevování města." }
-            }
-        },
-        {
-            nazev: "Gibraltar",
-            hotely: {
-                "h1": { nazev: "The Rock Hotel Gibraltar", cena: 22000, popis: "Slavný historický hotel na úpatí skály. Navštěvovaný celebritami, krásný výhled na Afriku." }
-            }
-        },
-        {
-            nazev: "Andorra",
-            hotely: {
-                "h1": { nazev: "Sport Hotel Hermitage & Spa", cena: 18500, popis: "Horský luxusní hotel v Pyrenejích. Špičkový wellness a lanovka přímo u hotelu." }
-            }
-        },
-        {
-            nazev: "Belgie",
-            hotely: {
-                "h1": { nazev: "Grand Place Boutique Brussels", cena: 14500, popis: "Stylové ubytování v historickém centru Bruselu. Belgické pralinky na uvítanou." }
-            }
-        },
-        {
-            nazev: "Nizozemsko",
-            hotely: {
-                "h1": { nazev: "Radisson Blu Amsterdam City", cena: 19200, popis: "Ubytování přímo u historických kanálů, moderní design a půjčovna kol v ceně." }
-            }
-        },
-        {
-            nazev: "Japonsko",
-            hotely: {
-                "h1": { nazev: "Shinjuku Granbell Tokyo", cena: 31500, popis: "Moderní hotel v pulzující čtvrti Šindžuku. Skvělá dostupnost metra a střešní bar." },
-                "h2": { nazev: "Kyoto Traditional Ryokan", cena: 36000, popis: "Zážitek s tradičním japonským stylem: tatami, termální lázně onsen a rituální čaj." }
-            }
-        },
-        {
-            nazev: "Korejská Republika",
-            hotely: {
-                "h1": { nazev: "Lotte Hotel Seoul", cena: 29500, popis: "Prémiový mrakodrap v centru Soulu, luxusní wellness, propojený s obřím nákupním centrem." }
-            },
-        },
-        {
-            nazev: "Čína",
-            hotely: {
-                "h1": { nazev: "The Shanghai Bund Grand Hotel", cena: 26000, popis: "Dechberoucí výhled na moderní mrakodrapy čtvrti Pudong a historické nábřeží." }
-            }
-        }
+        { nazev: "Maledivy", hotely: { "h1": { nazev: "Velassaru Maldives Luxury Resort", cena: 45000, popis: "Nádherné vodní vily, průzračná laguna, korálové útesy a kompletní all inclusive servis." }, "h2": { nazev: "Sun Siyam Vilu Reef", cena: 32000, popis: "Rodinný tropický ráj s bílým pískem, kokosovými palmami a bohatým večerním programem." } } },
+        { nazev: "Španělsko", hotely: { "h1": { nazev: "Sol Mallorca Beach Hotel", cena: 16500, popis: "Hotel kousek od písečné pláže s velkým bazénem. Ideální pro rodiny a páry." }, "h2": { nazev: "Barceló Andalucia Resort", cena: 21000, popis: "Luxusní hotel ve středomořském stylu s špičkovou španělskou gastronomií." } } },
+        { nazev: "Itálie", hotely: { "h1": { nazev: "Hotel Bella Vista Rimini", cena: 12400, popis: "Tradiční hotel na jadranské riviéře. Výtečná domácí pasta a pizza v ceně." }, "h2": { nazev: "Amalfi Coast Grand Palace", cena: 29000, popis: "Exkluzivní ubytování na skalách s výhledem na Tyrhénské moře." } } },
+        { nazev: "Řecko", hotely: { "h1": { nazev: "Lindos Royal Rhodes", cena: 17800, popis: "Resort v řeckém stylu s aquaparkem, skvělé all inclusive, kousek od antického Lindosu." }, "h2": { nazev: "Crete Paradise Beach", cena: 15900, popis: "Klidný hotel přímo na pláži s pozvolným vstupem do moře, ideální pro děti." } } },
+        { nazev: "Turecko", hotely: { "h1": { nazev: "Titanic Deluxe Lara", cena: 19500, popis: "Obří luxusní resort ve tvaru lodi. Ultra All Inclusive, nonstop bary a tobogány." }, "h2": { nazev: "Alanya Sun Marriott", cena: 13900, popis: "Příjemný hotel u Kleopatřiny pláže, skvělý poměr ceny a kvality služeb." } } },
+        { nazev: "Egypt", hotely: { "h1": { nazev: "Sunrise Crystal Bay Hurghada", cena: 14200, popis: "Soukromá písečná laguna, skvělé šnorchlování, luxusní servis a jídlo po celý den." }, "h2": { nazev: "Pickalbatros Oasis Marsa Alam", cena: 15500, popis: "Ráj pro potápěče, korálový útes přímo u hotelového mola, rodinná atmosféra." } } },
+        { nazev: "Tunisko", hotely: { "h1": { nazev: "El Mouradi Djerba Menzel", cena: 11200, popis: "Rozlehlý hotelový komplex v thalasso stylu s termálními bazény a písečnou pláží." }, "h2": { nazev: "Iberostar Kantaoui Bay", cena: 14800, popis: "Moderní pětihvězdičkový hotel s vysokým standardem služeb blízko přístavu Port El Kantaoui." } } },
+        { nazev: "USA", hotely: { "h1": { nazev: "The New York Manhattan Central", cena: 34000, popis: "Hotel přímo v srdci Manhattanu, pár kroků od Times Square a Central Parku." }, "h2": { nazev: "Miami South Beach Resort", cena: 28500, popis: "Art deco styl, ikonický bazén, pláž hned přes ulici a pulzující noční život." } } },
+        { nazev: "USA - Hawaii", hotely: { "h1": { nazev: "Waikiki Beach Marriott Resort", cena: 49000, popis: "Exotický ráj v Honolulu. Výhled na sopku Diamond Head a lekce surfování zdarma." }, "h2": { nazev: "Maui Ocean Spa Villas", cena: 56000, popis: "Luxusní vily uprostřed tropické zahrady s privátním přístupem na pláž Kaanapali." } } },
+        { nazev: "Francie", hotely: { "h1": { nazev: "Hotel de Paris Nice", cena: 24500, popis: "Ubytování na Azurovém pobřeží, přímo na Promenade des Anglais." }, "h2": { nazev: "Pullman Paris Tour Eiffel", cena: 31000, popis: "Pokoje s přímým výhledem na Eiffelovu věž, luxusní snídaně a perfektní dostupnost." } } },
+        { nazev: "Monako", hotely: { "h1": { nazev: "Fairmont Monte Carlo", cena: 48000, popis: "Unikátní hotel postavený přímo nad mořem, hned u slavné zatáčky okruhu Formule 1." } } },
+        { nazev: "Portugalsko", hotely: { "h1": { nazev: "Algarve Cliffs Cliff Resort", cena: 19800, popis: "Úchvatné výhledy na Atlantik z vysokých útesů, písečné pláže schované mezi skalami." }, "h2": { nazev: "Lisbon Pestana Citizen", cena: 16500, popis: "Boutique hotel v historickém centru Lisabonu, ideální pro objevování města." } } },
+        { nazev: "Gibraltar", hotely: { "h1": { nazev: "The Rock Hotel Gibraltar", cena: 22000, popis: "Slavný historický hotel na úpatí skály. Navštěvovaný celebritami, krásný výhled na Afriku." } } },
+        { nazev: "Andorra", hotely: { "h1": { nazev: "Sport Hotel Hermitage & Spa", cena: 18500, popis: "Horský luxusní hotel v Pyrenejích. Špičkový wellness a lanovka přímo u hotelu." } } },
+        { nazev: "Belgie", hotely: { "h1": { nazev: "Grand Place Boutique Brussels", cena: 14500, popis: "Stylové ubytování v historickém centru Bruselu. Belgické pralinky na uvítanou." } } },
+        { nazev: "Nizozemsko", hotely: { "h1": { nazev: "Radisson Blu Amsterdam City", cena: 19200, popis: "Ubytování přímo u historických kanálů, moderní design a půjčovna kol v ceně." } } },
+        { nazev: "Japonsko", hotely: { "h1": { nazev: "Shinjuku Granbell Tokyo", cena: 31500, popis: "Moderní hotel v pulzující čtvrti Šindžuku. Skvělá dostupnost metra a střešní bar." }, "h2": { nazev: "Kyoto Traditional Ryokan", cena: 36000, popis: "Zážitek s tradičním japonským stylem: tatami, termální lázně onsen a rituální čaj." } } },
+        { nazev: "Korejská Republika", hotely: { "h1": { nazev: "Lotte Hotel Seoul", cena: 29500, popis: "Prémiový mrakodrap v centru Soulu, luxusní wellness, propojený s obřím nákupním centrem." } } },
+        { nazev: "Čína", hotely: { "h1": { nazev: "The Shanghai Bund Grand Hotel", cena: 26000, popis: "Dechberoucí výhled na moderní mrakodrapy čtvrti Pudong a historické nábřeží." } } }
     ];
 
     window.currentBooking = {};
     window.currentEmployee = { jmeno: "", prijmeni: "", id: "" };
     window.globalCountries = {};
+
+    // KLÍČOVÁ OPRAVA: Data o zemích posloucháme ŽIVĚ ihned od startu aplikace na pozadí!
+    if (db) {
+        db.ref('destinace').on('value', (snapshot) => {
+            window.globalCountries = snapshot.val() || {};
+            
+            // Automaticky aktualizujeme výběrové menu pro zaměstnance, kdykoliv se databáze změní
+            const selectEl = document.getElementById('travel-country');
+            if(selectEl) {
+                selectEl.innerHTML = '';
+                if(Object.keys(window.globalCountries).length === 0) {
+                    selectEl.innerHTML = '<option value="">(V databázi nejsou žádné země)</option>';
+                } else {
+                    for(let cKey in window.globalCountries) {
+                        selectEl.innerHTML += `<option value="${window.globalCountries[cKey].nazev}">${window.globalCountries[cKey].nazev}</option>`;
+                    }
+                }
+            }
+            
+            // Pokud jsme v adminu, překreslí se i seznam destinací v administraci
+            updateAdminDestinationsUI();
+            
+            // Zkontrolujeme stav instalace pro admin panel
+            if(Object.keys(window.globalCountries).length === 0) {
+                document.getElementById('setup-box').style.display = 'block';
+            } else {
+                document.getElementById('setup-box').style.display = 'none';
+            }
+        });
+    }
 
     function nextStep(stepId) {
         document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -353,82 +275,44 @@
             nextStep('step-employee-login-name');
         } else if (pass === '6852') {
             nextStep('step-admin');
-            checkDatabaseStatus();
             loadAdminData();
             loadAdminEmployees();
-            loadAdminDestinations();
         } else {
             alert('Nesprávné heslo!');
         }
     }
 
-    // Zkontroluje, zda je databáze prázdná – pokud ano, nabídne instalaci 19 zemí
-    function checkDatabaseStatus() {
-        if(!db) return;
-        db.ref('destinace').once('value', (snapshot) => {
-            if(!snapshot.exists()) {
-                document.getElementById('setup-box').style.display = 'block';
-            } else {
-                document.getElementById('setup-box').style.display = 'none';
-            }
-        });
-    }
-
-    // Nahraje fixních 19 zemí do Firebase
     function installPredefinedDestinations() {
         if(!db) return;
         defaultDestinations.forEach(item => {
             db.ref('destinace').push(item);
         });
-        document.getElementById('setup-box').style.display = 'none';
-        alert('Všech 19 zemí a hotelů bylo úspěšně nahráno do databáze!');
+        alert('Všech 19 zemí bylo úspěšně nahráno a ihned zaktivováno!');
     }
 
     function goToCustomerStep() {
-        if(db) {
-            db.ref('destinace').once('value', (snapshot) => {
-                const selectEl = document.getElementById('travel-country');
-                selectEl.innerHTML = '';
-                const data = snapshot.val();
-                if(!data) {
-                    selectEl.innerHTML = '<option value="">(Nejprve klikněte na instalaci zemí v adminu)</option>';
-                } else {
-                    for(let cKey in data) {
-                        selectEl.innerHTML += `<option value="${data[cKey].nazev}">${data[cKey].nazev}</option>`;
-                    }
-                }
-                nextStep('step-customer-name');
-            });
-        } else {
-            nextStep('step-customer-name');
-        }
+        nextStep('step-customer-name');
     }
 
     function saveEmployeeIdentity() {
         const jmeno = document.getElementById('emp-login-name').value.trim();
         const prijmeni = document.getElementById('emp-login-surname').value.trim();
-        if (!jmeno || !prijmeni) {
-            alert('Vyplňte jméno a příjmení!');
-            return;
-        }
+        if (!jmeno || !prijmeni) return alert('Vyplňte jméno a příjmení!');
+        
         window.currentEmployee.jmeno = jmeno;
         window.currentEmployee.prijmeni = prijmeni;
         window.currentEmployee.id = (jmeno + "_" + prijmeni).replace(/\s+/g, '');
         document.getElementById('active-emp-shadow').innerText = jmeno + " " + prijmeni;
 
-        if (db) {
-            db.ref('zamestnanci/' + window.currentEmployee.id).update({ jmeno: jmeno, prijmeni: prijmeni });
-        }
+        if (db) db.ref('zamestnanci/' + window.currentEmployee.id).update({ jmeno: jmeno, prijmeni: prijmeni });
         nextStep('step-employee-main');
     }
 
     function saveNameAndGoNext() {
         const name = document.getElementById('cust-name').value.trim();
         const surname = document.getElementById('cust-surname').value.trim();
-        if (!name || !surname) {
-            alert('Vyplňte jméno a příjmení zákazníka!');
-            return;
-        }
+        if (!name || !surname) return alert('Vyplňte jméno a příjmení zákazníka!');
+        
         window.currentBooking.jmeno = name;
         window.currentBooking.prijmeni = surname;
         window.currentBooking.zadalZamestnanec = window.currentEmployee.jmeno + " " + window.currentEmployee.prijmeni;
@@ -437,10 +321,8 @@
 
     function generateHotels() {
         window.currentBooking.zeme = document.getElementById('travel-country').value;
-        if(!window.currentBooking.zeme) {
-            alert('Není vybrána žádná destinace!');
-            return;
-        }
+        if(!window.currentBooking.zeme) return alert('Není vybrána žádná destinace!');
+        
         window.currentBooking.pocetOsob = document.getElementById('count-total').value;
         window.currentBooking.dospeli = document.getElementById('count-adults').value;
         window.currentBooking.deti = document.getElementById('count-kids').value;
@@ -482,14 +364,12 @@
         if (!nasliJsmeHotely) {
             listDiv.innerHTML = '<p style="color:red;">Pro tuto destinaci zatím v systému nejsou zadané žádné hotely.</p>';
         }
-
         nextStep('step-hotels');
     }
 
     function bookHotel(hotelNazev, cena) {
         window.currentBooking.hotel = hotelNazev;
         window.currentBooking.cenaCelkem = cena * parseInt(window.currentBooking.pocetOsob);
-
         if (db) {
             db.ref('rezervace').push(window.currentBooking).then(() => checkForAdminMessages());
         } else {
@@ -522,56 +402,34 @@
     }
 
     function deleteAllBookings() {
-        if (confirm("Opravdu chcete kompletně VYMAZAT VŠECHNY zabookované dovolené z databáze?")) {
-            if (db) db.ref('rezervace').remove();
-        }
+        if (confirm("Opravdu chcete vymazat VŠECHNY rezervace?")) { if (db) db.ref('rezervace').remove(); }
     }
 
     function deleteAllEmployees() {
-        if (confirm("Opravdu chcete kompletně VYMAZAT VŠECHNY zaměstnance a jejich zprávy z databáze?")) {
-            if (db) {
-                db.ref('zamestnanci').remove();
-                db.ref('zpravy').remove();
-            }
-        }
+        if (confirm("Opravdu chcete smazat všechny zaměstnance?")) { if (db) { db.ref('zamestnanci').remove(); db.ref('zpravy').remove(); } }
     }
 
     function addCountry() {
         const nameInput = document.getElementById('new-country-name');
         const name = nameInput.value.trim();
         if(!name) return alert('Zadejte název státu!');
-        if(db) {
-            db.ref('destinace').push({ nazev: name });
-            nameInput.value = '';
-        }
+        if(db) { db.ref('destinace').push({ nazev: name }); nameInput.value = ''; }
     }
 
     function addHotel(countryKey) {
         const nazev = document.getElementById(`h-name-${countryKey}`).value.trim();
         const cena = document.getElementById(`h-price-${countryKey}`).value.trim();
         const popis = document.getElementById(`h-desc-${countryKey}`).value.trim();
-
-        if(!nazev || !cena || !popis) return alert('Musíte vyplnit Název, Cenu i Popis hotelu!');
-
-        if(db) {
-            db.ref(`destinace/${countryKey}/hotely`).push({
-                nazev: nazev,
-                cena: parseInt(cena),
-                popis: popis
-            });
-        }
+        if(!nazev || !cena || !popis) return alert('Vyplňte všechny údaje o hotelu!');
+        if(db) { db.ref(`destinace/${countryKey}/hotely`).push({ nazev: nazev, cena: parseInt(cena), popis: popis }); }
     }
 
     function deleteHotel(countryKey, hotelKey) {
-        if(confirm('Opravdu chcete tento hotel odstranit?')) {
-            if(db) db.ref(`destinace/${countryKey}/hotely/${hotelKey}`).remove();
-        }
+        if(confirm('Odstranit hotel?')) { if(db) db.ref(`destinace/${countryKey}/hotely/${hotelKey}`).remove(); }
     }
 
     function deleteCountry(countryKey) {
-        if(confirm('Opravdu chcete smazat tento stát včetně všech jeho hotelů?')) {
-            if(db) db.ref(`destinace/${countryKey}`).remove();
-        }
+        if(confirm('Smazat celý stát i s hotely?')) { if(db) db.ref(`destinace/${countryKey}`).remove(); }
     }
 
     function loadAdminData() {
@@ -580,56 +438,25 @@
             const listEl = document.getElementById('admin-bookings-list');
             listEl.innerHTML = '';
             const data = snapshot.val();
-            if (!data) {
-                listEl.innerHTML = '<li>Zatím žádné rezervace.</li>';
-                return;
-            }
+            if (!data) { listEl.innerHTML = '<li>Zatím žádné rezervace.</li>'; return; }
             let i = 1;
             for (let key in data) {
                 const b = data[key];
-                const li = document.createElement('li');
-                li.className = 'booking-item';
-
-                const textSpan = document.createElement('span');
-                textSpan.className = 'booking-text';
-                textSpan.innerHTML = `Dovolená ${i} (${b.zeme})`;
-                li.appendChild(textSpan);
-
-                const subtextSpan = document.createElement('span');
-                subtextSpan.className = 'booking-subtext';
-                subtextSpan.innerHTML = `<strong>Klient:</strong> ${b.jmeno} ${b.prijmeni}<br><strong>Osob celkem:</strong> ${b.pocetOsob}`;
-                li.appendChild(subtextSpan);
-
+                const li = document.createElement('li'); li.className = 'booking-item';
+                li.innerHTML = `<span class="booking-text">Dovolená ${i} (${b.zeme})</span>
+                                <span class="booking-subtext"><strong>Klient:</strong> ${b.jmeno} ${b.prijmeni}<br><strong>Osob:</strong> ${b.pocetOsob}</span>`;
+                
                 const delBtn = document.createElement('button');
-                delBtn.className = 'btn-danger btn-small';
-                delBtn.innerText = 'Smazat';
-                delBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    if(confirm('Opravdu chcete tuto dovolenou smazat?')) db.ref('rezervace/' + key).remove();
-                };
+                delBtn.className = 'btn-danger btn-small'; delBtn.innerText = 'Smazat';
+                delBtn.onclick = function(e) { e.stopPropagation(); if(confirm('Smazat?')) db.ref('rezervace/' + key).remove(); };
                 li.appendChild(delBtn);
 
                 const details = document.createElement('div');
                 details.className = 'booking-details';
-                details.innerHTML = `
-                    <p><strong>Zadal zaměstnanec:</strong> ${b.zadalZamestnanec || 'Neznámo'}</p>
-                    <p><strong>Hotel:</strong> ${b.hotel}</p>
-                    <p><strong>Délka pobytu:</strong> ${b.pocetDni} dní</p>
-                    <p><strong>Odlet:</strong> ${b.odlet}</p>
-                    <p><strong>Přílet:</strong> ${b.prilep}</p>
-                    <p><strong>Celková cena:</strong> ${b.cenaCelkem} Kč</p>
-                `;
-
-                li.onclick = function(e) {
-                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'P' && e.target.tagName !== 'STRONG') {
-                        const d = details.style.display;
-                        details.style.display = d === 'block' ? 'none' : 'block';
-                    }
-                };
-
-                li.appendChild(details);
-                listEl.appendChild(li);
-                i++;
+                details.innerHTML = `<p><strong>Zadal:</strong> ${b.zadalZamestnanec || 'Neznámo'}</p><p><strong>Hotel:</strong> ${b.hotel}</p><p><strong>Cena:</strong> ${b.cenaCelkem} Kč</p>`;
+                
+                li.onclick = function(e) { if(e.target.tagName !== 'BUTTON') details.style.display = details.style.display === 'block' ? 'none' : 'block'; };
+                li.appendChild(details); listEl.appendChild(li); i++;
             }
         });
     }
@@ -640,139 +467,93 @@
             const listEl = document.getElementById('admin-employees-list');
             listEl.innerHTML = '';
             const data = snapshot.val();
-            if (!data) {
-                listEl.innerHTML = '<li>Žádní zaměstnanci v evidenci.</li>';
-                return;
-            }
+            if (!data) { listEl.innerHTML = '<li>Žádní zaměstnanci.</li>'; return; }
             for (let key in data) {
                 const emp = data[key];
-                const li = document.createElement('li');
-                li.className = 'employee-item';
-
-                const textSpan = document.createElement('span');
-                textSpan.className = 'employee-text';
-                textSpan.innerText = `${emp.jmeno} ${emp.prijmeni}`;
-                li.appendChild(textSpan);
-
-                const msgBtn = document.createElement('button');
-                msgBtn.className = 'btn-secondary btn-small';
-                msgBtn.innerText = 'Zpráva / Přestávka';
-                msgBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    const zprava = prompt(`Zadejte zprávu/přestávku pro zaměstnance ${emp.jmeno}:`);
-                    if (zprava !== null && zprava.trim() !== "") {
-                        db.ref('zpravy/' + key).set({ text: zprava });
-                        alert(`Zpráva odeslána.`);
-                    }
-                };
+                const li = document.createElement('li'); li.className = 'employee-item';
+                li.innerHTML = `<span class="employee-text">${emp.jmeno} ${emp.prijmeni}</span>`;
+                
+                const msgBtn = document.createElement('button'); msgBtn.className = 'btn-secondary btn-small'; msgBtn.innerText = 'Zpráva';
+                msgBtn.onclick = function(e) { e.stopPropagation(); const z = prompt('Zpráva:'); if(z) db.ref('zpravy/' + key).set({ text: z }); };
                 li.appendChild(msgBtn);
 
-                const delEmpBtn = document.createElement('button');
-                delEmpBtn.className = 'btn-danger btn-small';
-                delEmpBtn.innerText = 'Smazat';
-                delEmpBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    if(confirm(`Opravdu chcete smazat zaměstnance ${emp.jmeno} ${emp.prijmeni}?`)) {
-                        db.ref('zamestnanci/' + key).remove();
-                        db.ref('zpravy/' + key).remove();
-                    }
-                };
+                const delEmpBtn = document.createElement('button'); delEmpBtn.className = 'btn-danger btn-small'; delEmpBtn.innerText = 'Smazat';
+                delEmpBtn.onclick = function(e) { e.stopPropagation(); if(confirm('Smazat?')) { db.ref('zamestnanci/' + key).remove(); db.ref('zpravy/' + key).remove(); } };
                 li.appendChild(delEmpBtn);
-
                 listEl.appendChild(li);
             }
         });
     }
 
-    function loadAdminDestinations() {
-        if (!db) return;
-        db.ref('destinace').on('value', (snapshot) => {
-            window.globalCountries = snapshot.val() || {};
-            const listEl = document.getElementById('admin-destinations-list');
-            listEl.innerHTML = '';
+    // Vyčleněná funkce pro spolehlivé překreslování seznamu destinací v administraci
+    function updateAdminDestinationsUI() {
+        const listEl = document.getElementById('admin-destinations-list');
+        if(!listEl) return;
+        listEl.innerHTML = '';
 
-            const data = window.globalCountries;
-            if (Object.keys(data).length === 0) {
-                listEl.innerHTML = '<li>Žádné destinace.</li>';
-                return;
-            }
+        const data = window.globalCountries;
+        if (Object.keys(data).length === 0) {
+            listEl.innerHTML = '<li>Žádné destinace.</li>';
+            return;
+        }
 
-            for (let countryKey in data) {
-                const zeme = data[countryKey];
-                const li = document.createElement('li');
-                li.className = 'destination-item';
+        for (let countryKey in data) {
+            const zeme = data[countryKey];
+            const li = document.createElement('li');
+            li.className = 'destination-item';
+            li.innerHTML = `<span class="destination-text">${zeme.nazev}</span>`;
 
-                const textSpan = document.createElement('span');
-                textSpan.className = 'destination-text';
-                textSpan.innerText = zeme.nazev;
-                li.appendChild(textSpan);
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'destination-details';
+            
+            const subForm = document.createElement('div');
+            subForm.className = 'admin-subform';
+            subForm.onclick = function(e) { e.stopPropagation(); };
+            subForm.innerHTML = `
+                <strong style="font-size:12px; color:#0056b3;">+ Přidat hotel do státu ${zeme.nazev}:</strong>
+                <input type="text" id="h-name-${countryKey}" placeholder="Název hotelu">
+                <input type="number" id="h-price-${countryKey}" placeholder="Cena za osobu (Kč)">
+                <textarea id="h-desc-${countryKey}" placeholder="Popis hotelu..." rows="2"></textarea>
+                <button onclick="addHotel('${countryKey}')" style="font-size:12px; padding:4px 8px;">Uložit hotel</button>
+            `;
+            detailsDiv.appendChild(subForm);
 
-                const detailsDiv = document.createElement('div');
-                detailsDiv.className = 'destination-details';
-                
-                const subForm = document.createElement('div');
-                subForm.className = 'admin-subform';
-                subForm.onclick = function(e) { e.stopPropagation(); };
-                subForm.innerHTML = `
-                    <strong style="font-size:12px; color:#0056b3;">+ Přidat hotel do státu ${zeme.nazev}:</strong>
-                    <input type="text" id="h-name-${countryKey}" placeholder="Název hotelu">
-                    <input type="number" id="h-price-${countryKey}" placeholder="Cena za osobu (Kč)">
-                    <textarea id="h-desc-${countryKey}" placeholder="Popis hotelu (služby, pláž, all inclusive...)" rows="2"></textarea>
-                    <button onclick="addHotel('${countryKey}')" style="font-size:12px; padding:4px 8px;">Uložit hotel</button>
-                `;
-                detailsDiv.appendChild(subForm);
-
-                const hotelsCont = document.createElement('div');
-                hotelsCont.style.marginTop = '10px';
-                if (zeme.hotely) {
-                    for (let hotelKey in zeme.hotely) {
-                        const h = zeme.hotely[hotelKey];
-                        const hDiv = document.createElement('div');
-                        hDiv.style = "background:#f0f0f0; padding:6px; margin-top:5px; border-radius:4px; font-weight:normal; font-size:13px;";
-                        hDiv.innerHTML = `
-                            <strong>${h.nazev}</strong> - ${h.cena} Kč/os.<br>
-                            <span style="font-size:11px; color:#555;">${h.popis}</span><br>
-                        `;
-                        
-                        const delHBtn = document.createElement('button');
-                        delHBtn.className = 'btn-danger';
-                        delHBtn.style = "width:auto; padding:2px 6px; font-size:10px; margin-top:4px;";
-                        delHBtn.innerText = 'Smazat hotel';
-                        delHBtn.onclick = function(e) {
-                            e.stopPropagation();
-                            deleteHotel(countryKey, hotelKey);
-                        };
-                        hDiv.appendChild(delHBtn);
-                        hotelsCont.appendChild(hDiv);
-                    }
-                } else {
-                    hotelsCont.innerHTML = '<p style="font-size:12px; color:#777; font-weight:normal; margin:5px 0 0 0;">V tomto státě zatím nejsou žádné hotely.</p>';
+            const hotelsCont = document.createElement('div');
+            hotelsCont.style.marginTop = '10px';
+            if (zeme.hotely) {
+                for (let hotelKey in zeme.hotely) {
+                    const h = zeme.hotely[hotelKey];
+                    const hDiv = document.createElement('div');
+                    hDiv.style = "background:#f0f0f0; padding:6px; margin-top:5px; border-radius:4px; font-weight:normal; font-size:13px;";
+                    hDiv.innerHTML = `<strong>${h.nazev}</strong> - ${h.cena} Kč/os.<br><span style="font-size:11px; color:#555;">${h.popis}</span><br>`;
+                    
+                    const delHBtn = document.createElement('button');
+                    delHBtn.className = 'btn-danger'; delHBtn.style = "width:auto; padding:2px 6px; font-size:10px; margin-top:4px;";
+                    delHBtn.innerText = 'Smazat hotel';
+                    delHBtn.onclick = function(e) { e.stopPropagation(); deleteHotel(countryKey, hotelKey); };
+                    hDiv.appendChild(delHBtn);
+                    hotelsCont.appendChild(hDiv);
                 }
-                detailsDiv.appendChild(hotelsCont);
-
-                const delCountryBtn = document.createElement('button');
-                delCountryBtn.className = 'btn-danger btn-small';
-                delCountryBtn.style.marginTop = '15px';
-                delCountryBtn.innerText = 'Smazat celý stát';
-                delCountryBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    deleteCountry(countryKey);
-                };
-                detailsDiv.appendChild(delCountryBtn);
-
-                li.onclick = function(e) {
-                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-                        const currentDisplay = detailsDiv.style.display;
-                        detailsDiv.style.display = currentDisplay === 'block' ? 'none' : 'block';
-                    }
-                };
-
-                li.appendChild(detailsDiv);
-                listEl.appendChild(li);
+            } else {
+                hotelsCont.innerHTML = '<p style="font-size:12px; color:#777; font-weight:normal; margin:5px 0 0 0;">Žádné hotely.</p>';
             }
-        });
+            detailsDiv.appendChild(hotelsCont);
+
+            const delCountryBtn = document.createElement('button');
+            delCountryBtn.className = 'btn-danger btn-small'; delCountryBtn.style.marginTop = '15px'; delCountryBtn.innerText = 'Smazat celý stát';
+            delCountryBtn.onclick = function(e) { e.stopPropagation(); deleteCountry(countryKey); };
+            detailsDiv.appendChild(delCountryBtn);
+
+            li.onclick = function(e) {
+                if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    detailsDiv.style.display = detailsDiv.style.display === 'block' ? 'none' : 'block';
+                }
+            };
+
+            li.appendChild(detailsDiv);
+            listEl.appendChild(li);
+        }
     }
 </script>
-
 </body>
 </html>
